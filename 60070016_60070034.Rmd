@@ -1,0 +1,289 @@
+---
+title: "steak_survey"
+author: "60070016, 60070034"
+date: "April 17, 2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# รายงานเรื่อง ความนิยมสเต็กในแต่ละระดับความสุก
+
+***
+### ชื่อ: ไชยพงษ์ นิธิพีรวัฒน์, ธิรดา ธีร์ธรรม
+### รหัสนักศึกษา: 60070016, 60070034
+### เวลาเรียน: อังคาร 9.00-12.00 น.
+***
+
+## โจทย์ปัญหา :
+### ปัจจัยต่าง ๆ ส่งผลต่อการเลือกรับประทานสเต็กอย่างไร ?
+#### ชุดข้อมูลที่ใช้จาก fivethirtyeight : steak_survey
+Data set from <https://github.com/fivethirtyeight/data/tree/master/steak-survey> by Walt Hickey
+
+### 1. Load libraries
+
+```{r}
+library(fivethirtyeight)
+library(tidyverse)
+
+```
+
+### 2. Look at the data (steak_survey) 
+
+```{r}
+# print out the dataframe
+steak_survey
+
+# Approximately look
+summary(steak_survey)
+```
+
+### 3. Looking for answers
+
+```{r}
+#Find percent of each steak prepared's type
+new_df <- steak_survey %>%
+            filter(steak_prep != "NA") %>%
+            group_by(steak_prep) %>%
+            summarise(amount= n()) %>%
+            mutate(percent = amount/sum(amount))
+            
+new_df
+
+#Separate amount of smoker in each steak prepared's type
+smoke_df <- steak_survey %>%
+            filter(steak_prep != "NA", smoke != "NA") %>%
+            group_by(smoke, steak_prep) %>%
+            summarise(amount=n()) %>%
+            mutate(percent = amount/sum(amount))
+
+smoke_df
+
+#Separate amount of drinker in each steak prepared's type
+alco_df <- steak_survey %>%
+            filter(steak_prep != "NA", alcohol != "NA") %>%
+            group_by(alcohol, steak_prep) %>%
+            summarise(amount=n()) %>%
+            mutate(percent = amount/sum(amount))
+
+alco_df
+
+#Separate sex in each steak prepared's type
+sex_df <- steak_survey %>%
+            filter(steak_prep != "NA") %>%
+            group_by(female, steak_prep) %>%
+            summarise(amount=n()) %>%
+            mutate(percent = amount/sum(amount))
+
+sex_df
+
+#Separate by age
+age_df <- steak_survey %>%
+            filter(steak_prep != "NA", age != "NA") %>%
+            group_by(age, steak_prep) %>%
+            summarise(amount=n()) %>%
+            mutate(percent = amount/sum(amount))
+age_df
+
+#Separate by household income
+hhold_df <- steak_survey %>%
+            filter(steak_prep != "NA") %>%
+            group_by(hhold_income, steak_prep) %>%
+            summarise(amount=n()) %>%
+            mutate(percent = amount/sum(amount))
+hhold_df
+
+#Separate by education
+educate_df <- steak_survey %>%
+            filter(steak_prep != "NA", educ != "NA") %>%
+            group_by(educ, steak_prep, educ) %>%
+            summarise(amount=n()) %>%
+            mutate(percent = amount/sum(amount))
+educate_df
+
+#Separate by region
+region_df <- steak_survey %>%
+            filter(steak_prep != "NA", region != "NA") %>%
+            group_by(region, steak_prep) %>%
+            summarise(amount=n()) %>%
+            mutate(percent = amount/sum(amount))
+
+region_df
+```
+
+### 4. Visualize data
+
+```{r}
+#Plot steak prepared chart
+b0 <- ggplot(new_df, aes(x = steak_prep)) +
+        # add geometry of the plot (bar chart)
+        #colour CR.https://ggplot2.tidyverse.org/reference/aes_colour_fill_alpha.html
+        geom_bar(aes(y = percent*100), stat = "identity", fill = "pink") +
+        # add labels
+        labs(x="Steak Prepared", y="Percent", title="Steak Prepared Chart") +
+        geom_text(aes(label = scales::percent(percent), y = percent*100), stat= "identity", vjust = 0)
+        
+b0 + coord_flip()
+```
+
+
+
+```{r}
+#Plot bar chart of smoker's steak
+b1 <- ggplot(smoke_df, aes(x = steak_prep, fill = smoke)) +
+        # add geometry of the plot (bar chart)
+        geom_bar(aes(y = percent*100), stat = "identity") +
+        #Separate charts CR.https://sebastiansauer.github.io/percentage_plot_ggplot2_V2/
+        facet_grid(~smoke) +
+        # add labels
+        labs(x="Smoker's Steak Prepared", y="Percent", title="Smoker's Steak Prepared Bar Chart") +  
+        geom_text(aes(label = scales::percent(percent), y = percent*100), stat= "identity", vjust = 0) +
+        #Rotate text under the chart CR.https://stackoverflow.com/questions/1330989/rotating-and-spacing-axis-labels-in-ggplot2
+        theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .35))
+
+b1 + coord_flip()
+```
+
+```{r}
+#Plot bar chart of drinker's steak
+b2 <- ggplot(alco_df, aes(x = steak_prep, fill = alcohol)) +
+        # add geometry of the plot (bar chart)
+        geom_bar(aes(y = percent*100), stat = "identity") +
+        #Separate charts
+        facet_grid(~alcohol) +
+        # add labels
+        labs(x="Drinker's Steak Prepared", y="Percent", title="Drinker's Steak Prepared Bar Chart") +
+        geom_text(aes(label = scales::percent(percent), y = percent*100), stat= "identity", vjust = 0) +
+        #Rotate text under the chart
+        theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .35))
+
+b2 + coord_flip()
+```
+
+```{r}
+#Plot bar chart of each sex's steak
+b3 <- ggplot(sex_df, aes(x = steak_prep, fill = female)) +
+        # add geometry of the plot (bar chart)
+        geom_bar(aes(y = percent*100), stat = "identity") +
+        #Separate charts
+        facet_grid(~female) +
+        # add labels
+        labs(x="Each sex's Steak Prepared", y="Percent", title="Each sex's Steak Prepared Bar Chart") +  
+        geom_text(aes(label = scales::percent(percent), y = percent*100), stat= "identity", vjust = 0) +
+        #Rotate text under the chart
+        theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .35))
+
+b3 + coord_flip()
+```
+
+```{r}
+#Plot bar chart of each age's steak
+b4 <- ggplot(age_df, aes(x = steak_prep, fill = age)) +
+        # add geometry of the plot (bar chart)
+        geom_bar(aes(y = percent*100), stat = "identity") +
+        #Separate charts
+        facet_grid(~age) +
+        # add label
+        labs(x="Each Span Of Age's Steak Prepared", y="Percent", title="Each Span Of Age's Steak Prepared Bar Chart")+  
+        geom_text(aes(label = scales::percent(percent), y = percent*100), stat= "identity", vjust = 0) +
+        #Rotate text under the chart
+        theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .35))
+
+b4 + coord_flip()
+```
+
+
+```{r}
+#Plot bar chart of household income's steak
+b5 <- ggplot(hhold_df, aes(x = steak_prep, fill = hhold_income)) +
+        # add geometry of the plot (bar chart)
+        geom_bar(aes(y = percent*100), stat = "identity") +
+        #Separate charts
+        facet_grid(hhold_income~.) + 
+        # add labels
+        labs(x="Household Income Range's Steak Prepared", y="Percent", title="Household Income Range's Steak Prepared Bar Chart") +  
+        geom_text(aes(label = scales::percent(percent), y = percent*100), stat= "identity", vjust = 0) +
+        #Rotate text under the chart
+        theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .35))
+
+b5 + coord_flip()
+```
+
+
+```{r}
+#Plot bar chart of education's steak
+b6 <- ggplot(educate_df, aes(x = steak_prep, fill = educ)) +
+        # add geometry of the plot (bar chart)
+        geom_bar(aes(y = percent*100), stat = "identity") +
+        #Separate charts
+        facet_grid(educ~.) + 
+        # add labels
+        labs(x="Education in Steak Prepared", y="Percent", title="Education's Steak Prepared Bar Chart") +  
+        geom_text(aes(label = scales::percent(percent), y = percent*100), stat= "identity", vjust = 0) +
+        #Rotate text under the chart
+        theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .35))
+
+b6 + coord_flip()
+```
+
+
+```{r}
+#Plot bar chart of region's steak
+b7 <- ggplot(region_df, aes(x = steak_prep, fill = region)) +
+        # add geometry of the plot (bar chart)
+        geom_bar(aes(y = percent*100), stat = "identity") +
+        #Separate charts
+        facet_grid(region~.) + 
+        # add labels
+        labs(x="Region in Steak Prepared", y="Percent", title="Region's Steak Prepared Bar Chart") +  
+        geom_text(aes(label = scales::percent(percent), y = percent*100), stat= "identity", vjust = 0) +
+        #Rotate text under the chart
+        theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = .35))
+
+b7 + coord_flip()
+```
+
+***
+#สรุปผล:
+###1. จากกราฟ จะเห็นได้ว่า ลำดับความนิยม ของประเภทของ steak จะเป็น Medium rare, Medium, Medium well, Well, Rare ตามลำดับจากมากไปน้อย
+```{r}
+b0 + coord_flip()
+```
+
+###2. จะเห็นได้ว่า กราฟผู้ที่สูบบุหรี่และดื่มสุรา มีรูปแบบกราฟที่เหมือนกับกราฟรวม จึงคาดการว่า การสูบบุหรี่และดื่มสุราไม่มีผล หรือมีผลน้อยต่อการเลือกทาน steak
+```{r}
+b1 + coord_flip()
+b2 + coord_flip()
+```
+
+###3. ส่วนเพศนั้นไม่มีผลต่อความนิยม steak ในระดับต่าง ๆ
+```{r}
+b3 + coord_flip()
+```
+
+###4. ในช่วงอายุ 18 - 29 ปีจะนิยม steak ระดับ Medium มากกว่า Medium rare
+###ส่วนในช่วงอายุ มากกว่า 60 ปี จะนิยม steak ระดับ Rare มากกว่า Well
+```{r}
+b4 + coord_flip()
+```
+
+###5. คนที่มีรายได้ครัวเรือนมากกว่า 150,000 ดอลลาร์ มีแนวโน้มว่านิยม steak ระดับ Medium มากกว่า Medium rare
+```{r}
+b5 + coord_flip()
+```
+
+###6. คนที่จบการศึกษาระดับบัณฑิตศึกษามีแนวโน้มที่จะนิยม steak ระดับ Rare มากกว่า Well
+```{r}
+b6 + coord_flip()
+```
+
+###7. คนที่อยู่ ใน Middle Atlantic จะนิยม steak ระดับ Medium มากกว่า Medium rare เล็กน้อย
+###คนที่อยู่ใน East South Central, Mountain และ West South Central จะไม่นิยมทาน steak ระดับ Rare 
+```{r}
+b7 + coord_flip()
+```
+***
